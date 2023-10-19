@@ -68,6 +68,18 @@ You can define selections and cursors by selecting any content in visual mode an
 
 ![basic](https://github.com/vscode-neovim/vscode-multi-cursor.nvim/assets/47070852/7ed98334-ccfb-4d35-bbf0-1f631c01255a)
 
+Tips:
+
+1. Add current word range and go to next
+
+```lua
+vim.keymap.set('n', '<C-d>', 'mciw*<Cmd>nohl<CR>', { remap = true })
+```
+
+<!-- vim.keymap.set('x', '<C-d>', [[y/\V<C-r>=escape(@",'/\')<CR><CR>gNmcgn<Cmd>nohl<Cr>]], { remap = true }) -->
+
+![C-d](https://github.com/vscode-neovim/vscode-multi-cursor.nvim/assets/47070852/7e829df2-83e1-4343-beaf-5f8ce4e7e55b)
+
 ### Start editing
 
 - `mi` - `start_left`: Start editing to the left of the cursor range. In visual line mode, the cursor will be positioned at the first non-space character
@@ -97,6 +109,10 @@ end)
 
 - `mcc` - `cancel` Clear all cursors
 
+You can clear the existing cursor range by redefining the cursor within the existing cursor range.
+
+![clear](https://github.com/vscode-neovim/vscode-multi-cursor.nvim/assets/47070852/9e28b2e6-cbb6-4790-b8dc-04a248e3e789)
+
 ### Navigate through cursors
 
 - `[mc` - `prev_cursor`: Go to the previous cursor position
@@ -112,19 +128,41 @@ You need to install `folke/flash.nvim` first.
 
 ### Wrapped VSCode commands
 
+Wraped some VSCode commands used for multi-cursor to make them work properly.
+
 ```lua
 local C = require 'vscode-multi-cursor'
 ```
 
 - `C.addSelectionToNextFindMatch`
 
-    Wraps `editor.action.addSelectionToNextFindMatch`, [Ctrl+D](https://code.visualstudio.com/docs/editor/codebasics#:~:text=these%20default%20shortcuts.-,Ctrl%2BD,-selects%20the%20word) in VSCode.
-
+  Wraps `editor.action.addSelectionToNextFindMatch`, [Ctrl+D](https://code.visualstudio.com/docs/editor/codebasics#:~:text=these%20default%20shortcuts.-,Ctrl%2BD,-selects%20the%20word) in VSCode.
 
 - `C.addSelectionToPreviousFindMatch`
 
-    Wraps `editor.action.addSelectionToPreviousFindMatch`
+  Wraps `editor.action.addSelectionToPreviousFindMatch`
 
 - `C.selectHighlights`
 
-    Wraps `editor.action.selectHighlights`, [Ctrl+Shift+L](https://code.visualstudio.com/docs/editor/codebasics#:~:text=more%20cursors%20with-,Ctrl%2BShift%2BL,-%2C%20which%20will%20add) in VSCode.
+  Wraps `editor.action.selectHighlights`, [Ctrl+Shift+L](https://code.visualstudio.com/docs/editor/codebasics#:~:text=more%20cursors%20with-,Ctrl%2BShift%2BL,-%2C%20which%20will%20add) in VSCode.
+
+For example, use `<C-d>` to add selection to next find match:
+
+nvim config:
+
+```lua
+vim.keymap.set({ "n", "x", "i" }, "<C-d>", function()
+  require("vscode-multi-cursor").addSelectionToNextFindMatch()
+end)
+```
+
+vscode keybindings.json:
+
+```json
+{
+  "args": "<C-d>",
+  "command": "vscode-neovim.send",
+  "key": "ctrl+d",
+  "when": "editorFocus && neovim.init"
+}
+```
