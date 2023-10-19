@@ -109,3 +109,22 @@ You need to install `folke/flash.nvim` first.
 - `mcs` - `flash_jump`: define cursors using the jump feature combined with `flash`.
 
 ![flash](https://github.com/vscode-neovim/vscode-multi-cursor.nvim/assets/47070852/1a1dc777-e394-4a50-882b-703b3cfc892d)
+
+### Wrapped VSCode commands
+
+```lua
+local C = require 'vscode-multi-cursor'
+```
+
+- `C.addSelectionToNextFindMatch`
+
+    Wraps `editor.action.addSelectionToNextFindMatch`, [Ctrl+D](https://code.visualstudio.com/docs/editor/codebasics#:~:text=these%20default%20shortcuts.-,Ctrl%2BD,-selects%20the%20word) in VSCode.
+
+
+- `C.addSelectionToPreviousFindMatch`
+
+    Wraps `editor.action.addSelectionToPreviousFindMatch`
+
+- `C.selectHighlights`
+
+    Wraps `editor.action.selectHighlights`, [Ctrl+Shift+L](https://code.visualstudio.com/docs/editor/codebasics#:~:text=more%20cursors%20with-,Ctrl%2BShift%2BL,-%2C%20which%20will%20add) in VSCode.
