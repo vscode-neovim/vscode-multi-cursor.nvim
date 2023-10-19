@@ -57,8 +57,7 @@ end
 
 ---@param motion MotionType
 ---@param no_hl? boolean Avoid unnecessary highlights and screen flickering when starting multi-cursors from visual mode
----@param cb? function
-local function create_cursor(motion, no_hl, cb)
+local function create_cursor(motion, no_hl)
   local hl = no_hl ~= true
   local mode = api.nvim_get_mode().mode ---@type string
   if mode == 'i' then return end
@@ -129,8 +128,6 @@ local function create_cursor(motion, no_hl, cb)
         end
       end
     end
-
-    if cb then cb() end
   end, 30)
 end
 
