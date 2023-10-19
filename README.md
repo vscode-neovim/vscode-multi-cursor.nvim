@@ -18,9 +18,14 @@ Install the plugin with your preferred package manager:
 
 ## Configuration
 
+Default options:
+
 ```lua
-require('vscode-multi-cursor').setup {
-  default_mappings = true, -- Optional, defaults to true
+require('vscode-multi-cursor').setup { -- Config is optional
+  -- Whether to set default mappings
+  default_mappings = true,
+  -- If set to true, only multiple cursors will be created without multiple selections
+  no_selection = false
 }
 ```
 
@@ -53,7 +58,9 @@ The basic usage flow is as follows: 1. Add cursors 2. Start editing
 
 ### Add selections (cursors)
 
-`mc` can be used in operator pending mode.
+- `mc` - `create_cursor`: Create selections (cursors)
+
+It can be used in operator pending mode.
 
 For example, you can use `mciw` to add a selection of the word under the cursor, use `mcl` to add the current cursor position, `mce` `mcj`, etc.
 
@@ -63,26 +70,42 @@ You can define selections and cursors by selecting any content in visual mode an
 
 ### Start editing
 
-- `mi` Start editing to the left of the cursor range, in visual line mode, the cursor will be positioned at the first non-space character
-- `mI` Start editing at the far left of the cursor range
-- `ma` Start editing to the right of the cursor range
-- `mA` Same as `ma`
+- `mi` - `start_left`: Start editing to the left of the cursor range. In visual line mode, the cursor will be positioned at the first non-space character
+- `mI` - `start_left_edge`: Start editing at the far left of the cursor range
+- `ma` - `start_right`: Start editing to the right of the cursor range
+- `mA` - `start_right`: Same as `ma`
 
-You can press `mc` in visual mode to start editing directly.
+Note: You can press `mc` in visual mode to start editing directly.
+
+All `start` functions accept an optional options. Fields are the same as the plugin options.
+
+For example, remapping vim's `I` and `A` in visual mode:
+
+```lua
+local k = vim.keymap.set
+k({ 'x' }, 'I', function()
+    local mode = api.nvim_get_mode().mode
+    M.start_left_edge { no_selection = mode == '\x16' }
+end)
+k({ 'x' }, 'A', function()
+    local mode = api.nvim_get_mode().mode
+    M.start_right { no_selection = mode == '\x16' }
+end)
+```
 
 ### Clear all selections (cursors)
 
-- `mcc` Clear all cursors
+- `mcc` - `cancel` Clear all cursors
 
 ### Navigate through cursors
 
-- `[mc` - Go to the previous cursor position
-- `]mc` - Go to the next cursor position
+- `[mc` - `prev_cursor`: Go to the previous cursor position
+- `]mc` - `next_cursor`: Go to the next cursor position
 
 ### Flash integration
 
 You need to install `folke/flash.nvim` first.
 
-Use `mcs` to define cursors using the jump feature combined with `flash`.
+- `mcs` - `flash_jump`: define cursors using the jump feature combined with `flash`.
 
 ![flash](https://github.com/vscode-neovim/vscode-multi-cursor.nvim/assets/47070852/1a1dc777-e394-4a50-882b-703b3cfc892d)

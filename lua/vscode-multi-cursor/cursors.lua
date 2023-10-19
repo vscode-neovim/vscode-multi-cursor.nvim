@@ -2,6 +2,7 @@ local api = vim.api
 
 local util = require 'vscode-multi-cursor.utils'
 local Cursor = require 'vscode-multi-cursor.cursor'
+local Config = require 'vscode-multi-cursor.config'
 
 local compare_position = util.compare_position
 local is_intersect = util.is_intersect
@@ -133,8 +134,13 @@ local function create_cursor(motion, no_hl, cb)
   end, 30)
 end
 
-local function _start_multiple_cursors(right, edge)
+---@param right boolean
+---@param edge boolean
+---@param opts? Config
+local function _start_multiple_cursors(right, edge, opts)
   if #STATE.cursors == 0 then return end
+
+  local config = Config.get(opts)
 
   if right then
     STATE.cursors[1]:jump_to_end()
@@ -159,6 +165,9 @@ local function _start_multiple_cursors(right, edge)
       if start.line == end_.line and math.abs(start.character - end_.character) == 1 then
         range.start = end_
       end
+
+      if config.no_selection then range.start = range['end'] end
+
       return range
     end,
     STATE.cursors
@@ -170,13 +179,14 @@ end
 
 ---@param right boolean
 ---@param edge boolean
-local function start_multiple_cursors(right, edge)
+---@param opts? Config
+local function start_multiple_cursors(right, edge, opts)
   local mode = api.nvim_get_mode().mode
   if mode:lower() == 'v' or mode == '\x16' then
     create_cursor(nil, true)
-    vim.defer_fn(function() _start_multiple_cursors(right, edge) end, 60)
+    vim.defer_fn(function() _start_multiple_cursors(right, edge, opts) end, 60)
   else
-    _start_multiple_cursors(right, edge)
+    _start_multiple_cursors(right, edge, opts)
   end
 end
 
@@ -230,9 +240,9 @@ end
 local M = {
   --stylua: ignore start
   cancel = function() reset() end,
-  start_left = function() start_multiple_cursors(false, false) end,
-  start_left_edge = function() start_multiple_cursors(false, true) end,
-  start_right = function() start_multiple_cursors(true, true) end,
+  start_left = function(opts) start_multiple_cursors(false, false, opts) end,
+  start_left_edge = function(opts) start_multiple_cursors(false, true, opts) end,
+  start_right = function(opts) start_multiple_cursors(true, true, opts) end,
   prev_cursor = function() navigate(-1) end,
   next_cursor = function() navigate(1) end,
   create_cursor = create_cursor,
@@ -246,7 +256,7 @@ function M.set_highlight()
 end
 
 function M.setup(opts)
-  opts = vim.tbl_extend('keep', opts or {}, { default_mappings = true })
+  Config.setup(opts)
 
   M.set_highlight()
 
@@ -268,7 +278,7 @@ function M.setup(opts)
   })
 
   -- Mappings
-  if opts.default_mappings then
+  if Config.default_mappings then
     local k = vim.keymap.set
     k({ 'n', 'x' }, 'mc', M.create_cursor, { expr = true, desc = 'Create cursor' })
     k({ 'n' }, 'mcc', M.cancel, { desc = 'Cancel/Clear all cursors' })
