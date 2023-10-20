@@ -38,4 +38,20 @@ function M.is_intersect(a, b)
     or M.position_in_range(b['end'], a)
 end
 
+function M.feedkeys(keys)
+  return api.nvim_feedkeys(api.nvim_replace_termcodes(keys, true, true, true), 'n', false)
+end
+
+---@param start_pos integer[]|nil {row, col} mark-indexed position.
+---@param end_pos integer[]|nil {row, col} mark-indexed position.
+---@param bufnr integer|nil
+function M.get_range(start_pos, end_pos, bufnr)
+  return vim.lsp.util.make_given_range_params(
+    start_pos or { fn.line 'v', fn.col 'v' - 1 },
+    end_pos or { fn.line '.', fn.col '.' - 1 },
+    bufnr or 0,
+    'utf-16'
+  ).range
+end
+
 return M

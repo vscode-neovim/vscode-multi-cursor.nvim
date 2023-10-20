@@ -1,14 +1,18 @@
 local api = vim.api
+local fn = vim.fn
 
-local util = require 'vscode-multi-cursor.utils'
+local util = require 'vscode-multi-cursor.util'
 local Cursor = require 'vscode-multi-cursor.cursor'
 local Config = require 'vscode-multi-cursor.config'
 
 local compare_position = util.compare_position
 local is_intersect = util.is_intersect
 local getline = util.getline
+local feedkeys = util.feedkeys
 
 ---@alias MotionType 'char' | 'line' | 'block'
+
+local mode2type = { v = 'char', V = 'line', ['\x16'] = 'block' }
 
 local STATE = {
   bufnr = 0, ---@type integer
@@ -68,73 +72,69 @@ local function create_cursor(motion, no_hl)
     if mode == 'n' then
       vim.go.operatorfunc = [[v:lua.require'vscode-multi-cursor'.create_cursor]]
       return 'g@'
-    elseif mode:lower() ~= 'v' and mode ~= '\x16' then
+    elseif mode ~= '\x16' and mode:lower() ~= 'v' then
       return
     end
   end
 
-  api.nvim_input '<ESC>'
+  local select_type = motion and motion or mode2type[mode]
 
-  vim.defer_fn(function()
-    local _start_pos = api.nvim_buf_get_mark(0, motion and '[' or '<') ---@type number[]
-    local _end_pos = api.nvim_buf_get_mark(0, motion and ']' or '>') ---@type number[]
-    local select_type ---@type MotionType
-    if motion then
-      select_type = motion
-    else
-      if mode == 'v' then
-        select_type = 'char'
-      elseif mode == 'V' then
-        select_type = 'line'
-      elseif mode == '\x16' then
-        select_type = 'block'
-      else
-        return
+  feedkeys '<ESC>'
+
+  local _start_pos ---@type number[]
+  local _end_pos ---@type number[]
+  if motion then
+    _end_pos = api.nvim_buf_get_mark(0, ']')
+    _start_pos = api.nvim_buf_get_mark(0, '[')
+  else
+    _start_pos = { fn.line 'v', fn.col 'v' - 1 }
+    _end_pos = { fn.line '.', fn.col '.' - 1 }
+  end
+
+  local start_pos, end_pos = _start_pos, _end_pos
+  if
+    _start_pos[1] > _end_pos[1] or (_start_pos[1] == _end_pos[1] and _start_pos[2] > _end_pos[2])
+  then
+    start_pos, end_pos = _end_pos, _start_pos
+  end
+
+  if select_type == 'char' then
+    if start_pos[1] == end_pos[1] then
+      local _, width = getline(start_pos[1])
+      if width == 0 then return end
+    end
+    local cursor = Cursor.new(start_pos, end_pos)
+    add_cursor(cursor, hl)
+  elseif select_type == 'line' then
+    for lnum = start_pos[1], end_pos[1] do
+      local _, line_width = getline(lnum)
+      if line_width > 0 then
+        local cursor = Cursor.new({ lnum, 0 }, { lnum, line_width - 1 }, true)
+        add_cursor(cursor, hl)
       end
     end
-
-    local start_pos, end_pos = _start_pos, _end_pos
-    if
-      _start_pos[1] > _end_pos[1] or (_start_pos[1] == _end_pos[1] and _start_pos[2] > _end_pos[2])
-    then
-      start_pos, end_pos = _end_pos, _start_pos
-    end
-
-    if select_type == 'char' then
-      if start_pos[1] == end_pos[1] then
-        local _, width = getline(start_pos[1])
-        if width == 0 then return end
-      end
-      local cursor = Cursor.new(start_pos, end_pos)
-      add_cursor(cursor, hl)
-    elseif select_type == 'line' then
-      for lnum = start_pos[1], end_pos[1] do
-        local _, line_width = getline(lnum)
-        if line_width > 0 then
-          local cursor = Cursor.new({ lnum, 0 }, { lnum, line_width - 1 }, true)
-          add_cursor(cursor, hl)
-        end
-      end
-    elseif select_type == 'block' then
-      local start_col = start_pos[2]
-      local end_col = end_pos[2]
-      for lnum = start_pos[1], end_pos[1] do
-        local _, line_width = getline(lnum)
-        if line_width > 0 then
-          local safe_end_col = math.min(line_width - 1, end_col) -- zero indexed
-          local safe_start_col = start_col < safe_end_col and start_col or safe_end_col
-          local cursor = Cursor.new({ lnum, safe_start_col }, { lnum, safe_end_col })
-          add_cursor(cursor, hl)
-        end
+  elseif select_type == 'block' then
+    local start_col = start_pos[2]
+    local end_col = end_pos[2]
+    for lnum = start_pos[1], end_pos[1] do
+      local _, line_width = getline(lnum)
+      if line_width > 0 then
+        local safe_end_col = math.min(line_width - 1, end_col) -- zero indexed
+        local safe_start_col = start_col < safe_end_col and start_col or safe_end_col
+        local cursor = Cursor.new({ lnum, safe_start_col }, { lnum, safe_end_col })
+        add_cursor(cursor, hl)
       end
     end
-  end, 30)
+  end
 end
 
 ---@param right boolean
 ---@param edge boolean
 ---@param opts? Config
-local function _start_multiple_cursors(right, edge, opts)
+local function start_multiple_cursors(right, edge, opts)
+  local mode = api.nvim_get_mode().mode
+  if mode:lower() == 'v' or mode == '\x16' then create_cursor(nil, true) end
+
   if #STATE.cursors == 0 then return end
 
   local config = Config.get(opts)
@@ -144,7 +144,8 @@ local function _start_multiple_cursors(right, edge, opts)
   else
     STATE.cursors[1]:jump_to_start()
   end
-  api.nvim_input('<ESC>' .. (right and 'a' or 'i'))
+
+  feedkeys('<ESC>' .. (right and 'a' or 'i'))
 
   local ranges = vim.tbl_map(
     ---@param cursor Cursor
@@ -169,21 +170,9 @@ local function _start_multiple_cursors(right, edge, opts)
     end,
     STATE.cursors
   )
+
   if vim.g.vscode then
     require('vscode-neovim').action('start-multiple-cursors', { args = { ranges } })
-  end
-end
-
----@param right boolean
----@param edge boolean
----@param opts? Config
-local function start_multiple_cursors(right, edge, opts)
-  local mode = api.nvim_get_mode().mode
-  if mode:lower() == 'v' or mode == '\x16' then
-    create_cursor(nil, true)
-    vim.defer_fn(function() _start_multiple_cursors(right, edge, opts) end, 60)
-  else
-    _start_multiple_cursors(right, edge, opts)
   end
 end
 
