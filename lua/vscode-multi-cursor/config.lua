@@ -1,7 +1,10 @@
 ---@class Config
 ---@field default_mappings boolean
 ---@field no_selection boolean
-local M = {}
+---@field ns? number
+local M = {
+  ns = vim.api.nvim_create_namespace 'vscode-multi-cursor',
+}
 
 ---@type Config
 local defaults = {

@@ -53,10 +53,10 @@ end
 
 local function reset()
   STATE.bufnr = api.nvim_get_current_buf()
-  for _, cursor in ipairs(STATE.cursors) do
-    cursor:dispose()
-  end
   STATE.cursors = {}
+  for _, buf in ipairs(api.nvim_list_bufs()) do
+    api.nvim_buf_clear_namespace(buf, Config.ns, 0, -1)
+  end
 end
 
 ---@param motion MotionType

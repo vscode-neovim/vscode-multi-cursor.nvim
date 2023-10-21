@@ -1,6 +1,6 @@
 local api = vim.api
 
-local NS = api.nvim_create_namespace 'vscode-multi-cursor'
+local Config = require 'vscode-multi-cursor.config'
 
 ---@param start_row number
 ---@param start_col number
@@ -9,7 +9,7 @@ local NS = api.nvim_create_namespace 'vscode-multi-cursor'
 ---@param is_cursor boolean
 ---@return number
 local function set_extmark(buf, start_row, start_col, end_row, end_col, is_cursor)
-  return api.nvim_buf_set_extmark(buf, NS, start_row, start_col, {
+  return api.nvim_buf_set_extmark(buf, Config.ns, start_row, start_col, {
     end_row = end_row,
     end_col = end_col,
     hl_group = is_cursor and 'VSCodeCursor' or 'VSCodeCursorRange',
@@ -33,7 +33,7 @@ M.__index = M
 
 function M:dispose()
   for _, id in ipairs(self.extmarks) do
-    api.nvim_buf_del_extmark(self.bufnr, NS, id)
+    api.nvim_buf_del_extmark(self.bufnr, Config.ns, id)
   end
 end
 
