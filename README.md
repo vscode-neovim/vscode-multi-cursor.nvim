@@ -171,3 +171,10 @@ vscode keybindings.json:
   "when": "editorFocus && neovim.init"
 }
 ```
+
+## Highlights
+
+| Group               | Default                     | Description           |
+| ------------------- | --------------------------- | --------------------- |
+| `VSCodeCursor`      | bg: `#177cb0` fg: `#ffffff` | Left and right cursor |
+| `VSCodeCursorRange` | bg: `#48c0a3` fg: `#ffffff` | Selected region       |
