@@ -129,7 +129,7 @@ You need to install `folke/flash.nvim` first.
 
 - `mcw` - `flash_word`: Defines the selection on any word.
 
-    ![flash_word](https://github.com/vscode-neovim/vscode-multi-cursor.nvim/assets/47070852/dc9f3629-fa1b-4c8d-bfcc-e099c0b56699)
+    ![flash_word](https://github.com/vscode-neovim/vscode-multi-cursor.nvim/assets/47070852/903dd5ea-1d41-4863-8394-54c7ac7e187f)
 
 ### Wrapped VSCode commands
 
