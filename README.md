@@ -121,7 +121,7 @@ You can clear the existing cursor range by redefining the cursor within the exis
 
 ### Flash integration
 
-You need to install `folke/flash.nvim` first.
+You need to install [`folke/flash.nvim`](https://github.com/folke/flash.nvim) first.
 
 - `mcs` - `flash_char`: Defines the cursor on any character.
 
