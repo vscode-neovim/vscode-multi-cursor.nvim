@@ -1,3 +1,5 @@
+local M = {}
+
 local api = vim.api
 local fn = vim.fn
 
@@ -203,38 +205,61 @@ local function navigate(direction)
   cursor:jump_to_start()
 end
 
----Create cursor using flash
-local flash_jump
-flash_jump = function()
-  local ok, flash = pcall(require, 'flash')
-  if not ok then
-    vim.notify "Can't load flash, make sure you have installed flash.nvim"
-    return
+--stylua: ignore start
+M.cancel          = function()     return reset()                                    end
+M.start_left      = function(opts) return start_multiple_cursors(false, false, opts) end
+M.start_left_edge = function(opts) return start_multiple_cursors(false, true, opts)  end
+M.start_right     = function(opts) return start_multiple_cursors(true, true, opts)   end
+M.prev_cursor     = function()     return navigate(-1)                               end
+M.next_cursor     = function()     return navigate(1)                                end
+M.create_cursor   = function(...)  return create_cursor(...)                         end
+--stylua: ignore end
+
+---------------------------
+---- Flash integration ----
+---------------------------
+
+local function with_flash(func)
+  return function(...)
+    local ok, flash = pcall(require, 'flash')
+    if ok then
+      func(flash, ...)
+    else
+      vim.notify "Can't load flash, make sure you have installed flash.nvim"
+    end
   end
+end
+---Create cursor using flash
+M.flash_char = with_flash(function(flash)
   flash.jump {
     search = { multi_window = false },
-    action = function(match, state)
+    action = function(match)
       local pos = match.pos
       local _, width = getline(pos[1])
       if width > 0 then add_cursor(Cursor.new(pos, pos)) end
-      state:restore()
-      flash_jump()
+      flash.jump { continue = true }
     end,
   }
-end
+end)
 
-local M = {
-  --stylua: ignore start
-  cancel = function() reset() end,
-  start_left = function(opts) start_multiple_cursors(false, false, opts) end,
-  start_left_edge = function(opts) start_multiple_cursors(false, true, opts) end,
-  start_right = function(opts) start_multiple_cursors(true, true, opts) end,
-  prev_cursor = function() navigate(-1) end,
-  next_cursor = function() navigate(1) end,
-  create_cursor = create_cursor,
-  flash_jump = flash_jump,
-  --stylua: ignore end
-}
+---Create cursor using flash
+M.flash_word = with_flash(function(flash)
+  flash.jump {
+    pattern = '.',
+    search = {
+      multi_window = false,
+      mode = function(pattern)
+        if pattern:sub(1, 1) == '.' then pattern = pattern:sub(2) end
+        return ([[\<%s\w*\>]]):format(pattern), ([[\<%s]]):format(pattern)
+      end,
+    },
+    jump = { pos = 'range' },
+    action = function(match)
+      add_cursor(Cursor.new(match.pos, match.end_pos))
+      flash.jump { continue = true }
+    end,
+  }
+end)
 
 function M.set_highlight()
   api.nvim_set_hl(0, 'VSCodeCursor', { bg = '#177cb0', fg = '#ffffff', default = true })
@@ -274,7 +299,8 @@ function M.setup(opts)
     k({ 'n', 'x' }, 'mA', M.start_right, { desc = 'Start cursors on the right' })
     k({ 'n' }, '[mc', M.prev_cursor, { desc = 'Goto prev cursor' })
     k({ 'n' }, ']mc', M.next_cursor, { desc = 'Goto next cursor' })
-    k({ 'n' }, 'mcs', M.flash_jump, { desc = 'Create cursor using flash' })
+    k({ 'n' }, 'mcs', M.flash_char, { desc = 'Create cursor using flash' })
+    k({ 'n' }, 'mcw', M.flash_word, { desc = 'Create selection using flash' })
   end
 end
 

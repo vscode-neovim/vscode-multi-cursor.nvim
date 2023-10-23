@@ -43,7 +43,8 @@ k({ 'n', 'x' }, 'ma', cursors.start_right, { desc = 'Start cursors on the right'
 k({ 'n', 'x' }, 'mA', cursors.start_right, { desc = 'Start cursors on the right' })
 k({ 'n' }, '[mc', cursors.prev_cursor, { desc = 'Goto prev cursor' })
 k({ 'n' }, ']mc', cursors.next_cursor, { desc = 'Goto next cursor' })
-k({ 'n' }, 'mcs', cursors.flash_jump, { desc = 'Create cursor using flash' })
+k({ 'n' }, 'mcs', cursors.flash_char, { desc = 'Create cursor using flash' })
+k({ 'n' }, 'mcw', cursors.flash_word, { desc = 'Create selection using flash' })
 ```
 
 You can refer to customize the mappings.
@@ -122,9 +123,13 @@ You can clear the existing cursor range by redefining the cursor within the exis
 
 You need to install `folke/flash.nvim` first.
 
-- `mcs` - `flash_jump`: define cursors using the jump feature combined with `flash`.
+- `mcs` - `flash_char`: Defines the cursor on any character.
 
-![flash](https://github.com/vscode-neovim/vscode-multi-cursor.nvim/assets/47070852/1a1dc777-e394-4a50-882b-703b3cfc892d)
+    ![flash_char](https://github.com/vscode-neovim/vscode-multi-cursor.nvim/assets/47070852/c3a98e00-6e54-4451-aaed-d57045e02968)
+
+- `mcw` - `flash_word`: Defines the selection on any word.
+
+    ![flash_word](https://github.com/vscode-neovim/vscode-multi-cursor.nvim/assets/47070852/dc9f3629-fa1b-4c8d-bfcc-e099c0b56699)
 
 ### Wrapped VSCode commands
 
