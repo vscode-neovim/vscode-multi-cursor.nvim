@@ -2,7 +2,9 @@ local M = {}
 
 local is_set
 
-function M.setup(opts) require('vscode-multi-cursor.cursors').setup(opts) end
+function M.setup(opts)
+  require('vscode-multi-cursor.cursors').setup(opts)
+end
 
 return setmetatable(M, {
   __index = function(_, k)

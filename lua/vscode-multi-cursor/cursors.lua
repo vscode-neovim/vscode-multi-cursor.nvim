@@ -3,10 +3,10 @@ local M = {}
 local api = vim.api
 local fn = vim.fn
 
-local util = require 'vscode-multi-cursor.util'
-local Cursor = require 'vscode-multi-cursor.cursor'
 local Config = require 'vscode-multi-cursor.config'
+local Cursor = require 'vscode-multi-cursor.cursor'
 local STATE = require 'vscode-multi-cursor.state'
+local util = require 'vscode-multi-cursor.util'
 
 local compare_position = util.compare_position
 local getline = util.getline
@@ -54,7 +54,9 @@ local function create_cursor(motion, no_hl)
   if select_type == 'char' then
     if start_pos[1] == end_pos[1] then
       local _, width = getline(start_pos[1])
-      if width == 0 then return end
+      if width == 0 then
+        return
+      end
     end
     local cursor = Cursor.new(start_pos, end_pos)
     STATE.add_cursor(cursor, hl)
@@ -86,9 +88,13 @@ end
 ---@param opts? Config
 local function start_multiple_cursors(right, edge, opts)
   local mode = api.nvim_get_mode().mode
-  if mode:lower() == 'v' or mode == '\x16' then create_cursor(nil, true) end
+  if mode:lower() == 'v' or mode == '\x16' then
+    create_cursor(nil, true)
+  end
 
-  if #STATE.cursors == 0 then return end
+  if #STATE.cursors == 0 then
+    return
+  end
 
   local config = Config.get(opts)
 
@@ -117,7 +123,9 @@ local function start_multiple_cursors(right, edge, opts)
         range.start = end_
       end
 
-      if config.no_selection then range.start = range['end'] end
+      if config.no_selection then
+        range.start = range['end']
+      end
 
       return range
     end,
@@ -131,8 +139,12 @@ end
 
 ---@param direction -1|1 -1 previous, 1 next
 local function navigate(direction)
-  if #STATE.cursors == 0 then return end
-  if #STATE.cursors == 1 then STATE.cursors[1]:jump_to_start() end
+  if #STATE.cursors == 0 then
+    return
+  end
+  if #STATE.cursors == 1 then
+    STATE.cursors[1]:jump_to_start()
+  end
 
   local curr_pos = vim.lsp.util.make_position_params(0, 'utf-16').position
   local cursor
@@ -187,7 +199,9 @@ M.flash_char = with_flash(function(flash)
     action = function(match)
       local pos = match.pos
       local _, width = getline(pos[1])
-      if width > 0 then STATE.add_cursor(Cursor.new(pos, pos)) end
+      if width > 0 then
+        STATE.add_cursor(Cursor.new(pos, pos))
+      end
       flash.jump { continue = true }
     end,
   }
@@ -200,7 +214,9 @@ M.flash_word = with_flash(function(flash)
     search = {
       multi_window = false,
       mode = function(pattern)
-        if pattern:sub(1, 1) == '.' then pattern = pattern:sub(2) end
+        if pattern:sub(1, 1) == '.' then
+          pattern = pattern:sub(2)
+        end
         return ([[\<%s\w*\>]]):format(pattern), ([[\<%s]]):format(pattern)
       end,
     },

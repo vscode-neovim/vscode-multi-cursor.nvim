@@ -16,9 +16,15 @@ end
 ---@param b lsp.Position
 ---@return -1|0|1 -1 before, 0 equal, 1 after
 function M.compare_position(a, b)
-  if a.line > b.line then return 1 end
-  if a.line == b.line and a.character > b.character then return 1 end
-  if a.line == b.line and a.character == b.character then return 0 end
+  if a.line > b.line then
+    return 1
+  end
+  if a.line == b.line and a.character > b.character then
+    return 1
+  end
+  if a.line == b.line and a.character == b.character then
+    return 0
+  end
   return -1
 end
 

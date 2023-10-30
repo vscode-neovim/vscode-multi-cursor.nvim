@@ -2,8 +2,8 @@ local M = {}
 
 local api = vim.api
 
-local util = require 'vscode-multi-cursor.util'
 local Config = require 'vscode-multi-cursor.config'
+local util = require 'vscode-multi-cursor.util'
 
 local buffer = 0 ---@type integer
 local cursors = {} ---@type Cursor[]
@@ -29,13 +29,14 @@ function M.add_cursor(cursor, highlight)
 
   if not ignore then
     table.insert(cursors, cursor)
-    if highlight ~= false then cursor:highlight() end
+    if highlight ~= false then
+      cursor:highlight()
+    end
   end
 
-  table.sort(
-    cursors,
-    function(a, b) return util.compare_position(a.range.start, b.range.start) == -1 end
-  )
+  table.sort(cursors, function(a, b)
+    return util.compare_position(a.range.start, b.range.start) == -1
+  end)
 
   return not ignore
 end
@@ -51,7 +52,9 @@ function M.reset()
 end
 
 function M.check_buffer()
-  if buffer ~= api.nvim_get_current_buf() then M.reset() end
+  if buffer ~= api.nvim_get_current_buf() then
+    M.reset()
+  end
 end
 
 return setmetatable(M, {

@@ -28,4 +28,8 @@ function M.get(opts)
   return vim.tbl_extend('force', c, opts or {})
 end
 
-return setmetatable(M, { __index = function(_, k) return config[k] end })
+return setmetatable(M, {
+  __index = function(_, k)
+    return config[k]
+  end,
+})

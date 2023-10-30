@@ -37,7 +37,9 @@ function M:dispose()
   end
 end
 
-function M:right_range() return self.range end
+function M:right_range()
+  return self.range
+end
 
 function M:left_range()
   local s_l = self.range.start.line
@@ -47,14 +49,22 @@ function M:left_range()
 
   local line = api.nvim_buf_get_lines(self.bufnr, s_l, s_l + 1, false)[1] or ''
   s_c = math.max(s_c, api.nvim_strwidth(line:match '^%s*' or ''))
-  if s_l == e_l and s_c > e_c then e_c = s_c end
+  if s_l == e_l and s_c > e_c then
+    e_c = s_c
+  end
   return { start = { line = e_l, character = e_c }, ['end'] = { line = s_l, character = s_c } }
 end
-function M:left_edge_range() return { start = self.range['end'], ['end'] = self.range.start } end
+function M:left_edge_range()
+  return { start = self.range['end'], ['end'] = self.range.start }
+end
 
-function M:jump_to_start() return api.nvim_win_set_cursor(0, self.start_pos) end
+function M:jump_to_start()
+  return api.nvim_win_set_cursor(0, self.start_pos)
+end
 
-function M:jump_to_end() return api.nvim_win_set_cursor(0, self.end_pos) end
+function M:jump_to_end()
+  return api.nvim_win_set_cursor(0, self.end_pos)
+end
 
 function M:highlight()
   local s_row, s_col, e_row, e_col =
