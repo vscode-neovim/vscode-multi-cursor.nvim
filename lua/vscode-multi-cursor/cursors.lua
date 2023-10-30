@@ -6,9 +6,9 @@ local fn = vim.fn
 local util = require 'vscode-multi-cursor.util'
 local Cursor = require 'vscode-multi-cursor.cursor'
 local Config = require 'vscode-multi-cursor.config'
+local STATE = require 'vscode-multi-cursor.state'
 
 local compare_position = util.compare_position
-local is_intersect = util.is_intersect
 local getline = util.getline
 local feedkeys = util.feedkeys
 
@@ -16,59 +16,13 @@ local feedkeys = util.feedkeys
 
 local mode2type = { v = 'char', V = 'line', ['\x16'] = 'block' }
 
-local STATE = {
-  bufnr = 0, ---@type integer
-  cursors = {}, ---@type Cursor[]
-}
-
----@param cursor Cursor
----@param highlight boolean
----@return boolean
-local function add_cursor(cursor, highlight)
-  local ignore = false
-
-  STATE.cursors = vim.tbl_filter(
-    ---@param other Cursor
-    function(other)
-      if is_intersect(cursor.range, other.range) then
-        ignore = true
-        other:dispose()
-        return false
-      end
-      return true
-    end,
-    STATE.cursors
-  )
-
-  if not ignore then
-    table.insert(STATE.cursors, cursor)
-    if highlight ~= false then cursor:highlight() end
-  end
-
-  table.sort(
-    STATE.cursors,
-    function(a, b) return compare_position(a.range.start, b.range.start) == -1 end
-  )
-
-  return not ignore
-end
-
-local function reset()
-  STATE.bufnr = api.nvim_get_current_buf()
-  STATE.cursors = {}
-  for _, buf in ipairs(api.nvim_list_bufs()) do
-    api.nvim_buf_clear_namespace(buf, Config.ns, 0, -1)
-  end
-end
-
 ---@param motion MotionType
 ---@param no_hl? boolean Avoid unnecessary highlights and screen flickering when starting multi-cursors from visual mode
 local function create_cursor(motion, no_hl)
+  STATE.check_buffer()
+
   local hl = no_hl ~= true
   local mode = api.nvim_get_mode().mode ---@type string
-  if mode == 'i' then return end
-  local curbuf = api.nvim_get_current_buf()
-  if curbuf ~= STATE.bufnr then reset() end
 
   if not motion then
     if mode == 'n' then
@@ -83,21 +37,18 @@ local function create_cursor(motion, no_hl)
 
   feedkeys '<ESC>'
 
-  local _start_pos ---@type number[]
-  local _end_pos ---@type number[]
+  local start_pos ---@type number[]
+  local end_pos ---@type number[]
   if motion then
-    _end_pos = api.nvim_buf_get_mark(0, ']')
-    _start_pos = api.nvim_buf_get_mark(0, '[')
+    end_pos = api.nvim_buf_get_mark(0, ']')
+    start_pos = api.nvim_buf_get_mark(0, '[')
   else
-    _start_pos = { fn.line 'v', fn.col 'v' - 1 }
-    _end_pos = { fn.line '.', fn.col '.' - 1 }
+    start_pos = { fn.line 'v', fn.col 'v' - 1 }
+    end_pos = { fn.line '.', fn.col '.' - 1 }
   end
 
-  local start_pos, end_pos = _start_pos, _end_pos
-  if
-    _start_pos[1] > _end_pos[1] or (_start_pos[1] == _end_pos[1] and _start_pos[2] > _end_pos[2])
-  then
-    start_pos, end_pos = _end_pos, _start_pos
+  if start_pos[1] > end_pos[1] or (start_pos[1] == end_pos[1] and start_pos[2] > end_pos[2]) then
+    start_pos, end_pos = end_pos, start_pos
   end
 
   if select_type == 'char' then
@@ -106,13 +57,13 @@ local function create_cursor(motion, no_hl)
       if width == 0 then return end
     end
     local cursor = Cursor.new(start_pos, end_pos)
-    add_cursor(cursor, hl)
+    STATE.add_cursor(cursor, hl)
   elseif select_type == 'line' then
     for lnum = start_pos[1], end_pos[1] do
       local _, line_width = getline(lnum)
       if line_width > 0 then
         local cursor = Cursor.new({ lnum, 0 }, { lnum, line_width - 1 }, true)
-        add_cursor(cursor, hl)
+        STATE.add_cursor(cursor, hl)
       end
     end
   elseif select_type == 'block' then
@@ -124,7 +75,7 @@ local function create_cursor(motion, no_hl)
         local safe_end_col = math.min(line_width - 1, end_col) -- zero indexed
         local safe_start_col = start_col < safe_end_col and start_col or safe_end_col
         local cursor = Cursor.new({ lnum, safe_start_col }, { lnum, safe_end_col })
-        add_cursor(cursor, hl)
+        STATE.add_cursor(cursor, hl)
       end
     end
   end
@@ -206,7 +157,7 @@ local function navigate(direction)
 end
 
 --stylua: ignore start
-M.cancel          = function()     return reset()                                    end
+M.cancel          = function()     return STATE.reset()                              end
 M.start_left      = function(opts) return start_multiple_cursors(false, false, opts) end
 M.start_left_edge = function(opts) return start_multiple_cursors(false, true, opts)  end
 M.start_right     = function(opts) return start_multiple_cursors(true, true, opts)   end
@@ -236,7 +187,7 @@ M.flash_char = with_flash(function(flash)
     action = function(match)
       local pos = match.pos
       local _, width = getline(pos[1])
-      if width > 0 then add_cursor(Cursor.new(pos, pos)) end
+      if width > 0 then STATE.add_cursor(Cursor.new(pos, pos)) end
       flash.jump { continue = true }
     end,
   }
@@ -255,7 +206,7 @@ M.flash_word = with_flash(function(flash)
     },
     jump = { pos = 'range' },
     action = function(match)
-      add_cursor(Cursor.new(match.pos, match.end_pos))
+      STATE.add_cursor(Cursor.new(match.pos, match.end_pos))
       flash.jump { continue = true }
     end,
   }
@@ -279,9 +230,7 @@ function M.setup(opts)
   )
   api.nvim_create_autocmd({ 'WinEnter' }, {
     group = group,
-    callback = function()
-      if api.nvim_get_current_buf() ~= STATE.bufnr then M.cancel() end
-    end,
+    callback = STATE.check_buffer,
   })
   api.nvim_create_autocmd({ 'InsertEnter', 'TextChanged' }, {
     group = group,
