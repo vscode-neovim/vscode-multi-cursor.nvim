@@ -51,11 +51,12 @@ You can refer to customize the mappings.
 
 ## Usage
 
+> **Important**
+> This plugin is purely for assisting in creating multiple cursors in vscode and does not include any editing functionality.
+
 All examples use the default mappings.
 
-Firstly, this plugin is purely for assisting in creating multiple cursors in vscode and does not include any editing functionality.
-
-The basic usage flow is as follows: 1. Add cursors 2. Start editing
+The basic usage flow is as fllows: 1. Add cursors 2. Start editing
 
 ### Add selections (cursors)
 
@@ -88,7 +89,8 @@ vim.keymap.set('n', '<C-d>', 'mciw*<Cmd>nohl<CR>', { remap = true })
 - `ma` - `start_right`: Start editing to the right of the cursor range
 - `mA` - `start_right`: Same as `ma`
 
-Note: You can press `mc` in visual mode to start editing directly.
+> **Note**
+> You can press above keys in visual mode to start editing directly.
 
 All `start` functions accept an optional options. Fields are the same as the plugin options.
 
