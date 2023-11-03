@@ -48,16 +48,26 @@ function M.feedkeys(keys)
   return api.nvim_feedkeys(api.nvim_replace_termcodes(keys, true, true, true), 'n', false)
 end
 
----@param start_pos integer[]|nil {row, col} mark-indexed position.
----@param end_pos integer[]|nil {row, col} mark-indexed position.
----@param bufnr integer|nil
-function M.get_range(start_pos, end_pos, bufnr)
-  return vim.lsp.util.make_given_range_params(
-    start_pos or { fn.line 'v', fn.col 'v' - 1 },
-    end_pos or { fn.line '.', fn.col '.' - 1 },
-    bufnr or 0,
-    'utf-16'
-  ).range
+function M.get_range()
+  local mode = api.nvim_get_mode().mode
+
+  local A = fn.getpos 'v'
+  local B = fn.getpos '.'
+  local start_pos = { A[2], A[3] - 1 }
+  local end_pos = { B[2], B[3] - 1 }
+
+  if start_pos[1] > end_pos[1] or (start_pos[1] == end_pos[1] and start_pos[2] > end_pos[2]) then
+    start_pos, end_pos = end_pos, start_pos
+  end
+
+  if mode == 'V' then
+    start_pos = { start_pos[1], 0 }
+    end_pos = { end_pos[1], math.max(0, api.nvim_strwidth(fn.getline(end_pos[1])) - 1) }
+  end
+
+  api.nvim_win_set_cursor(0, end_pos)
+
+  return vim.lsp.util.make_given_range_params(start_pos, end_pos, 0, 'utf-16').range
 end
 
 return M
