@@ -69,11 +69,26 @@ local function create_cursor(motion, no_hl)
       end
     end
   elseif select_type == 'block' then
-    local start_col = start_pos[2]
-    local end_col = end_pos[2]
+    local start_dis_col, end_dis_col
+    do
+      local start_line_text = fn.getline(start_pos[1])
+      local end_line_text = fn.getline(end_pos[1])
+
+      local start_col = start_pos[2]
+      local end_col = end_pos[2]
+
+      local start_part = fn.strpart(start_line_text, 0, start_col)
+      local end_part = fn.strpart(end_line_text, 0, end_col)
+
+      start_dis_col = fn.strdisplaywidth(start_part)
+      end_dis_col = fn.strdisplaywidth(end_part)
+    end
+
     for lnum = start_pos[1], end_pos[1] do
-      local _, line_width = getline(lnum)
+      local line, line_width = getline(lnum)
       if line_width > 0 then
+        local start_col = util.discol_to_col(line, start_dis_col)
+        local end_col = util.discol_to_col(line, end_dis_col)
         local safe_end_col = math.min(line_width - 1, end_col) -- zero indexed
         local safe_start_col = start_col < safe_end_col and start_col or safe_end_col
         local cursor = Cursor.new({ lnum, safe_start_col }, { lnum, safe_end_col })

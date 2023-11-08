@@ -70,4 +70,25 @@ function M.get_range()
   return vim.lsp.util.make_given_range_params(start_pos, end_pos, 0, 'utf-16').range
 end
 
+---display-col to col
+---@param line string
+---@param discol number
+function M.discol_to_col(line, discol)
+  local col = 0
+  local max_col = api.nvim_strwidth(line)
+  local curr_col, curr_discol
+  while col <= max_col do
+    curr_col = math.floor((col + max_col) / 2)
+    curr_discol = fn.strdisplaywidth(fn.strpart(line, 0, curr_col))
+    if curr_discol == discol then
+      return curr_col
+    elseif curr_discol > discol then
+      max_col = curr_col - 1
+    else
+      col = curr_col + 1
+    end
+  end
+  return curr_col
+end
+
 return M
