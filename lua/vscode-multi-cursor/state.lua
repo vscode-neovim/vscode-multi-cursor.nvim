@@ -42,8 +42,8 @@ function M.add_cursor(cursor, highlight)
 end
 
 function M.reset()
+  buffer = api.nvim_get_current_buf()
   if #cursors > 0 then
-    buffer = api.nvim_get_current_buf()
     cursors = {}
     for _, buf in ipairs(api.nvim_list_bufs()) do
       api.nvim_buf_clear_namespace(buf, Config.ns, 0, -1)
