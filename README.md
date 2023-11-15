@@ -51,7 +51,7 @@ You can refer to customize the mappings.
 
 ## Usage
 
-> **Important**
+> [!Important]
 > This plugin is purely for assisting in creating multiple cursors in vscode and does not include any editing functionality.
 
 All examples use the default mappings.
