@@ -91,4 +91,13 @@ function M.discol_to_col(line, discol)
   return curr_col
 end
 
+function M.char_at_col(line, byte_col)
+  local line_str = fn.getline(line)
+  local char_idx = fn.charidx(line_str, (byte_col - 1))
+  local char_nr = fn.strgetchar(line_str, char_idx)
+  if char_nr ~= -1 then
+    return fn.nr2char(char_nr)
+  end
+end
+
 return M

@@ -14,6 +14,8 @@ local function set_extmark(buf, start_row, start_col, end_row, end_col, is_curso
     end_col = end_col,
     hl_group = is_cursor and 'VSCodeCursor' or 'VSCodeCursorRange',
     priority = is_cursor and 9999 or 9998,
+    hl_eol = true,
+    strict = false,
   })
 end
 
