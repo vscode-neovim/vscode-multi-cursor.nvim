@@ -9,7 +9,6 @@ local STATE = require 'vscode-multi-cursor.state'
 local util = require 'vscode-multi-cursor.util'
 
 local compare_position = util.compare_position
-local getline = util.getline
 local feedkeys = util.feedkeys
 
 ---@alias MotionType 'char' | 'line' | 'block'
@@ -52,19 +51,15 @@ local function create_cursor(motion, no_hl)
   end
 
   if select_type == 'char' then
-    if start_pos[1] == end_pos[1] then
-      local _, width = getline(start_pos[1])
-      if width == 0 then
-        return
-      end
+    if start_pos[1] ~= end_pos[1] or #fn.getline(start_pos[1]) > 0 then
+      local cursor = Cursor.new(start_pos, end_pos)
+      STATE.add_cursor(cursor, hl)
     end
-    local cursor = Cursor.new(start_pos, end_pos)
-    STATE.add_cursor(cursor, hl)
   elseif select_type == 'line' then
     for lnum = start_pos[1], end_pos[1] do
-      local _, line_width = getline(lnum)
-      if line_width > 0 then
-        local cursor = Cursor.new({ lnum, 0 }, { lnum, line_width - 1 }, true)
+      local line = fn.getline(lnum)
+      if #line > 0 then
+        local cursor = Cursor.new({ lnum, 0 }, { lnum, #line }, true)
         STATE.add_cursor(cursor, hl)
       end
     end
@@ -215,8 +210,7 @@ M.flash_char = with_flash(function(flash)
     search = { multi_window = false },
     action = function(match)
       local pos = match.pos
-      local _, width = getline(pos[1])
-      if width > 0 then
+      if #fn.getline(pos[1]) > 0 then
         STATE.add_cursor(Cursor.new(pos, pos))
       end
       flash.jump { continue = true }

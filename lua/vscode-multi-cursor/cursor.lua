@@ -1,4 +1,4 @@
-local api = vim.api
+local api, fn = vim.api, vim.fn
 
 local Config = require 'vscode-multi-cursor.config'
 
@@ -14,7 +14,6 @@ local function set_extmark(buf, start_row, start_col, end_row, end_col, is_curso
     end_col = end_col,
     hl_group = is_cursor and 'VSCodeCursor' or 'VSCodeCursorRange',
     priority = is_cursor and 9999 or 9998,
-    hl_eol = true,
     strict = false,
   })
 end
@@ -50,7 +49,7 @@ function M:left_range()
   local e_c = self.range['end'].character
 
   local line = api.nvim_buf_get_lines(self.bufnr, s_l, s_l + 1, false)[1] or ''
-  s_c = math.max(s_c, api.nvim_strwidth(line:match '^%s*' or ''))
+  s_c = math.max(s_c, #(line:match '^%s*' or ''))
   if s_l == e_l and s_c > e_c then
     e_c = s_c
   end
@@ -85,8 +84,10 @@ end
 ---@return Cursor
 function M.new(start_pos, end_pos, is_line)
   local self = setmetatable({}, M)
-  self.start_pos = start_pos
-  self.end_pos = end_pos
+  self.start_pos = vim.deepcopy(start_pos)
+  self.start_pos[2] = math.max(0, math.min(#fn.getline(start_pos[1]) - 1, start_pos[2]))
+  self.end_pos = vim.deepcopy(end_pos)
+  self.end_pos[2] = math.max(0, math.min(#fn.getline(end_pos[1]) - 1, end_pos[2]))
   self.is_whole_line = not not is_line
   self.bufnr = api.nvim_get_current_buf()
   self.extmarks = {}
