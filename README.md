@@ -13,6 +13,7 @@ Install the plugin with your preferred package manager:
   'vscode-neovim/vscode-multi-cursor.nvim',
   event = 'VeryLazy',
   cond = not not vim.g.vscode,
+  opts = {},
 }
 ```
 
