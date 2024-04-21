@@ -5,18 +5,8 @@ local api = vim.api
 local Config = require 'vscode-multi-cursor.config'
 local util = require 'vscode-multi-cursor.util'
 
-local prompt
-pcall(function()
-  prompt = require('vscode-neovim').get_status_item 'vscode-multi-cursor.nvim'
-end)
 local buffer = 0 ---@type integer
 local cursors = {} ---@type Cursor[]
-
-local function refresh_status()
-  if prompt then
-    prompt.text = #cursors == 0 and '' or ('Cursor: %d'):format(#cursors)
-  end
-end
 
 ---@param cursor Cursor
 ---@param highlight boolean
@@ -48,7 +38,6 @@ function M.add_cursor(cursor, highlight)
     return util.compare_position(a.range.start, b.range.start) == -1
   end)
 
-  refresh_status()
   return not ignore
 end
 
@@ -59,7 +48,6 @@ function M.reset()
     for _, buf in ipairs(api.nvim_list_bufs()) do
       api.nvim_buf_clear_namespace(buf, Config.ns, 0, -1)
     end
-    refresh_status()
   end
 end
 
