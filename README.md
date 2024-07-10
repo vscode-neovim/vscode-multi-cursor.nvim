@@ -128,13 +128,16 @@ You need to install [`folke/flash.nvim`](https://github.com/folke/flash.nvim) fi
 
 - `mcs` - `flash_char`: Defines the cursor on any character.
 
-    ![flash_char](https://github.com/vscode-neovim/vscode-multi-cursor.nvim/assets/47070852/c3a98e00-6e54-4451-aaed-d57045e02968)
+  ![flash_char](https://github.com/vscode-neovim/vscode-multi-cursor.nvim/assets/47070852/c3a98e00-6e54-4451-aaed-d57045e02968)
 
 - `mcw` - `flash_word`: Defines the selection on any word.
 
-    ![flash_word](https://github.com/vscode-neovim/vscode-multi-cursor.nvim/assets/47070852/903dd5ea-1d41-4863-8394-54c7ac7e187f)
+  ![flash_word](https://github.com/vscode-neovim/vscode-multi-cursor.nvim/assets/47070852/903dd5ea-1d41-4863-8394-54c7ac7e187f)
 
 ### Wrapped VSCode commands
+
+> [!Important]
+> It is recommended to use vscode-neovim's `vscode.with_insert`.
 
 Wraped some VSCode commands used for multi-cursor to make them work properly.
 
