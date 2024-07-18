@@ -1,3 +1,4 @@
+---@diagnostic disable: duplicate-set-field
 local M = {}
 
 local api = vim.api
@@ -67,6 +68,19 @@ function M.char_at_col(line, byte_col)
   local char_nr = fn.strgetchar(line_str, char_idx)
   if char_nr ~= -1 then
     return fn.nr2char(char_nr)
+  end
+end
+
+if fn.has 'nvim-0.10.0' == 0 then
+  M.virtcol2col = fn.virtcol2col
+else
+  M.virtcol2col = function(winid, lnum, virtcol)
+    local byte_idx = fn.virtcol2col(winid, lnum, virtcol) - 1
+    local buf = api.nvim_win_get_buf(winid)
+    local line = M.get_line(buf, lnum - 1)
+    local char_idx = fn.charidx(line, byte_idx)
+    local prefix = fn.strcharpart(line, 0, char_idx + 1)
+    return #prefix
   end
 end
 

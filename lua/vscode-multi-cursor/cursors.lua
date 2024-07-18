@@ -10,6 +10,7 @@ local util = require 'vscode-multi-cursor.util'
 
 local compare_position = util.compare_position
 local feedkeys = util.feedkeys
+local virtcol2col = util.virtcol2col
 
 ---@alias MotionType 'char' | 'line' | 'block'
 
@@ -81,8 +82,8 @@ local function create_cursor(motion, no_hl)
       local line_text = fn.getline(line_1)
       local line_diswidth = fn.strdisplaywidth(line_text)
       if start_vcol <= line_diswidth then
-        local start_col = fn.virtcol2col(0, line_1, start_vcol)
-        local end_col = fn.virtcol2col(0, line_1, end_vcol)
+        local start_col = virtcol2col(0, line_1, start_vcol)
+        local end_col = virtcol2col(0, line_1, end_vcol)
         local start_col_offset = fn.strlen(util.char_at_col(line_1, start_col) or '')
         local end_col_offset = fn.strlen(util.char_at_col(line_1, end_col) or '')
         local cursor = Cursor.new(
