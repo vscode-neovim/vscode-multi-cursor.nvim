@@ -77,7 +77,7 @@ else
   M.virtcol2col = function(winid, lnum, virtcol)
     local byte_idx = fn.virtcol2col(winid, lnum, virtcol) - 1
     local buf = api.nvim_win_get_buf(winid)
-    local line = M.get_line(buf, lnum - 1)
+    local line = fn.getbufoneline(buf, lnum)
     local char_idx = fn.charidx(line, byte_idx)
     local prefix = fn.strcharpart(line, 0, char_idx + 1)
     return #prefix
